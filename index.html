@@ -91,8 +91,14 @@
                 <button class="btn btn-success" onclick="showImportExport()">
                     <span>📦</span> Backup
                 </button>
+                <button class="btn btn-secondary" onclick="showExportReport()">
+                    <span>📊</span> Export Report
+                </button>
                 <button class="btn btn-secondary" onclick="showSettings()">
                     <span>⚙️</span> Categories
+                </button>
+                <button class="btn btn-secondary" onclick="removeDuplicates()" title="Remove duplicate transactions">
+                    <span>🧹</span> Clean Duplicates
                 </button>
                 <button class="btn btn-primary" onclick="showAddTransaction()">
                     <span>➕</span> Add Transaction
@@ -128,37 +134,38 @@
 
         <div id="advancedFilters" style="display: none; background: white; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem;">
             <h3 style="margin-bottom: 1rem;">Filter Transactions</h3>
+            <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">💡 Tip: Hold Ctrl (Windows) or Cmd (Mac) to select multiple options</p>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
                 <div>
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Type</label>
-                    <select id="filterType" onchange="updateFilterMainCategories(); applyFilter();" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
-                        <option value="all">All Types</option>
-                        <option value="income">Income Only</option>
-                        <option value="expense">Expense Only</option>
+                    <select id="filterType" multiple size="3" onchange="updateFilterMainCategories(); applyFilter();" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
+                        <option value="all" selected>All Types</option>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
                     </select>
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Main Category</label>
-                    <select id="filterCategory" onchange="updateFilterSubcategory1(); applyFilter();" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
-                        <option value="all">All Categories</option>
+                    <select id="filterCategory" multiple size="3" onchange="updateFilterSubcategory1(); applyFilter();" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
+                        <option value="all" selected>All Categories</option>
                     </select>
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Subcategory 1</label>
-                    <select id="filterSubcategory1" onchange="updateFilterSubcategory2(); applyFilter();" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
-                        <option value="all">All Subcategories</option>
+                    <select id="filterSubcategory1" multiple size="3" onchange="updateFilterSubcategory2(); applyFilter();" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
+                        <option value="all" selected>All Subcategories</option>
                     </select>
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Subcategory 2</label>
-                    <select id="filterSubcategory2" onchange="applyFilter()" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
-                        <option value="all">All Subcategories</option>
+                    <select id="filterSubcategory2" multiple size="3" onchange="applyFilter()" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
+                        <option value="all" selected>All Subcategories</option>
                     </select>
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Advisor</label>
-                    <select id="filterAdvisor" onchange="applyFilter()" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
-                        <option value="all">All Advisors</option>
+                    <select id="filterAdvisor" multiple size="3" onchange="applyFilter()" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;">
+                        <option value="all" selected>All Advisors</option>
                     </select>
                 </div>
                 <div style="display: flex; align-items: flex-end;">
@@ -466,6 +473,34 @@
             <div style="margin-top: 2rem;">
                 <h4 style="margin-bottom: 1rem;">Current Advisors</h4>
                 <div id="advisorsList" class="category-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Report Modal -->
+    <div id="exportReportModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Export Report</h2>
+                <button class="close-btn" onclick="closeModal('exportReportModal')">&times;</button>
+            </div>
+            <p style="color: #64748b; margin-bottom: 1.5rem;">Export the current filtered view as a report</p>
+            
+            <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+                <h4 style="margin-bottom: 0.5rem;">Current Filters Applied:</h4>
+                <p id="reportFilterSummary" style="color: #64748b; font-size: 0.875rem;"></p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                <button class="btn btn-success" onclick="exportToExcel()" style="width: 100%;">
+                    <span>📊</span> Export to Excel
+                </button>
+                <button class="btn btn-secondary" onclick="exportToWord()" style="width: 100%;">
+                    <span>📄</span> Export to Word
+                </button>
+                <button class="btn btn-primary" onclick="printReport()" style="width: 100%;">
+                    <span>🖨️</span> Print Report
+                </button>
             </div>
         </div>
     </div>
@@ -915,6 +950,173 @@
             document.getElementById('importExportModal').classList.add('active');
         }
 
+        function showExportReport() {
+            const filtered = getFilteredTransactions();
+            const period = document.getElementById('periodFilter').value;
+            let summary = `Period: ${period}`;
+            
+            if (period === 'specific-month') {
+                const month = document.getElementById('monthSelector').value;
+                if (month) summary += ` (${month})`;
+            }
+            
+            summary += ` | ${filtered.length} transactions | Total: $${filtered.reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0).toLocaleString()}`;
+            
+            document.getElementById('reportFilterSummary').textContent = summary;
+            document.getElementById('exportReportModal').classList.add('active');
+        }
+
+        function exportToExcel() {
+            const filtered = getFilteredTransactions();
+            let csv = 'Date,Type,Category,Subcategory 1,Subcategory 2,Advisor,Amount\n';
+            
+            filtered.forEach(t => {
+                csv += `${t.date},${t.type},${t.category},"${t.subcategory1 || ''}","${t.subcategory2 || ''}",${t.advisor || ''},${t.amount}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `PL-Report-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert('Excel file downloaded! Open with Excel or Google Sheets.');
+        }
+
+        function exportToWord() {
+            const filtered = getFilteredTransactions();
+            const totalIncome = filtered.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const totalExpenses = filtered.filter(t => t.type === 'expense').reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            const netProfit = totalIncome - totalExpenses;
+            
+            let html = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
+                <head><meta charset="utf-8"><title>P&L Report</title></head>
+                <body>
+                    <h1>Profit & Loss Report</h1>
+                    <p><strong>Generated:</strong> ${new Date().toLocaleDateString()}</p>
+                    <p><strong>Period:</strong> ${document.getElementById('periodFilter').value}</p>
+                    <p><strong>Total Transactions:</strong> ${filtered.length}</p>
+                    <hr>
+                    <h2>Summary</h2>
+                    <p><strong>Total Income:</strong> $${totalIncome.toLocaleString()}</p>
+                    <p><strong>Total Expenses:</strong> $${totalExpenses.toLocaleString()}</p>
+                    <p><strong>Net Profit:</strong> $${netProfit.toLocaleString()}</p>
+                    <hr>
+                    <h2>Transactions</h2>
+                    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Subcategory 1</th>
+                            <th>Subcategory 2</th>
+                            <th>Advisor</th>
+                            <th>Amount</th>
+                        </tr>
+                        ${filtered.map(t => `
+                            <tr>
+                                <td>${t.date}</td>
+                                <td>${t.type}</td>
+                                <td>${t.category}</td>
+                                <td>${t.subcategory1 || ''}</td>
+                                <td>${t.subcategory2 || ''}</td>
+                                <td>${t.advisor || ''}</td>
+                                <td style="text-align: right;">$${t.amount.toLocaleString()}</td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                </body>
+                </html>
+            `;
+            
+            const blob = new Blob([html], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `PL-Report-${new Date().toISOString().split('T')[0]}.doc`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert('Word document downloaded!');
+        }
+
+        function printReport() {
+            const filtered = getFilteredTransactions();
+            const totalIncome = filtered.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const totalExpenses = filtered.filter(t => t.type === 'expense').reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            const netProfit = totalIncome - totalExpenses;
+            
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>P&L Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        h1 { color: #1e293b; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f8fafc; font-weight: bold; }
+                        .summary { background: #f8fafc; padding: 15px; margin: 20px 0; border-radius: 8px; }
+                        .summary p { margin: 5px 0; }
+                        @media print {
+                            button { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>Profit & Loss Report</h1>
+                    <p><strong>Generated:</strong> ${new Date().toLocaleDateString()}</p>
+                    <p><strong>Period:</strong> ${document.getElementById('periodFilter').value}</p>
+                    <p><strong>Total Transactions:</strong> ${filtered.length}</p>
+                    
+                    <div class="summary">
+                        <h2>Summary</h2>
+                        <p><strong>Total Income:</strong> $${totalIncome.toLocaleString()}</p>
+                        <p><strong>Total Expenses:</strong> $${totalExpenses.toLocaleString()}</p>
+                        <p><strong>Net Profit:</strong> <span style="color: ${netProfit >= 0 ? '#10b981' : '#ef4444'}">$${netProfit.toLocaleString()}</span></p>
+                    </div>
+                    
+                    <h2>Transactions</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Subcategory 1</th>
+                                <th>Subcategory 2</th>
+                                <th>Advisor</th>
+                                <th style="text-align: right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filtered.map(t => `
+                                <tr>
+                                    <td>${t.date}</td>
+                                    <td>${t.type}</td>
+                                    <td>${t.category}</td>
+                                    <td>${t.subcategory1 || ''}</td>
+                                    <td>${t.subcategory2 || ''}</td>
+                                    <td>${t.advisor || ''}</td>
+                                    <td style="text-align: right; color: ${t.type === 'income' ? '#10b981' : '#ef4444'};">
+                                        ${t.type === 'income' ? '+' : '-'}$${Math.abs(t.amount).toLocaleString()}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <br>
+                    <button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer;">Print Report</button>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
             editingTransactionId = null;
@@ -931,11 +1133,14 @@
         }
 
         function resetFilters() {
-            document.getElementById('filterType').value = 'all';
-            document.getElementById('filterCategory').value = 'all';
-            document.getElementById('filterSubcategory1').value = 'all';
-            document.getElementById('filterSubcategory2').value = 'all';
-            document.getElementById('filterAdvisor').value = 'all';
+            // Reset multi-select dropdowns to "all" only
+            const selects = ['filterType', 'filterCategory', 'filterSubcategory1', 'filterSubcategory2', 'filterAdvisor'];
+            selects.forEach(id => {
+                const select = document.getElementById(id);
+                Array.from(select.options).forEach(opt => {
+                    opt.selected = opt.value === 'all';
+                });
+            });
             updateFilterMainCategories();
             applyFilter();
         }
@@ -1142,6 +1347,42 @@
                 saveData();
                 renderDashboard();
             }
+        }
+
+        // Remove duplicate transactions
+        function removeDuplicates() {
+            if (!confirm('This will remove duplicate transactions (same date, type, category, amount, and advisor). Continue?')) {
+                return;
+            }
+            
+            const originalCount = transactions.length;
+            const seen = new Map();
+            const uniqueTransactions = [];
+            
+            // Sort by ID to keep the first occurrence
+            const sorted = [...transactions].sort((a, b) => a.id - b.id);
+            
+            sorted.forEach(t => {
+                // Create a key from transaction properties (excluding id and isRecurring flag)
+                const key = `${t.date}|${t.type}|${t.category}|${t.subcategory1}|${t.subcategory2}|${t.amount}|${t.advisor}`;
+                
+                if (!seen.has(key)) {
+                    seen.set(key, true);
+                    uniqueTransactions.push(t);
+                }
+            });
+            
+            const duplicatesRemoved = originalCount - uniqueTransactions.length;
+            
+            if (duplicatesRemoved === 0) {
+                alert('No duplicates found! Your transactions are clean.');
+                return;
+            }
+            
+            transactions = uniqueTransactions;
+            saveData();
+            renderDashboard();
+            alert(`Successfully removed ${duplicatesRemoved} duplicate transaction${duplicatesRemoved !== 1 ? 's' : ''}!`);
         }
 
         // Add category
@@ -1593,31 +1834,42 @@
                 }
             }
             
-            // Advanced filters
-            const filterType = document.getElementById('filterType').value;
-            const filterCategory = document.getElementById('filterCategory').value;
-            const filterSubcategory1 = document.getElementById('filterSubcategory1').value;
-            const filterSubcategory2 = document.getElementById('filterSubcategory2').value;
-            const filterAdvisor = document.getElementById('filterAdvisor').value;
+            // Advanced filters - now support multi-select
+            const filterTypeSelect = document.getElementById('filterType');
+            const filterCategorySelect = document.getElementById('filterCategory');
+            const filterSubcategory1Select = document.getElementById('filterSubcategory1');
+            const filterSubcategory2Select = document.getElementById('filterSubcategory2');
+            const filterAdvisorSelect = document.getElementById('filterAdvisor');
             
-            if (filterType !== 'all') {
-                filtered = filtered.filter(t => t.type === filterType);
+            const selectedTypes = Array.from(filterTypeSelect.selectedOptions).map(opt => opt.value);
+            const selectedCategories = Array.from(filterCategorySelect.selectedOptions).map(opt => opt.value);
+            const selectedSub1 = Array.from(filterSubcategory1Select.selectedOptions).map(opt => opt.value);
+            const selectedSub2 = Array.from(filterSubcategory2Select.selectedOptions).map(opt => opt.value);
+            const selectedAdvisors = Array.from(filterAdvisorSelect.selectedOptions).map(opt => opt.value);
+            
+            // Type filter
+            if (!selectedTypes.includes('all') && selectedTypes.length > 0) {
+                filtered = filtered.filter(t => selectedTypes.includes(t.type));
             }
             
-            if (filterCategory !== 'all') {
-                filtered = filtered.filter(t => t.category === filterCategory);
+            // Category filter
+            if (!selectedCategories.includes('all') && selectedCategories.length > 0) {
+                filtered = filtered.filter(t => selectedCategories.includes(t.category));
             }
             
-            if (filterSubcategory1 !== 'all') {
-                filtered = filtered.filter(t => t.subcategory1 === filterSubcategory1 || t.subcategory === filterSubcategory1);
+            // Subcategory 1 filter
+            if (!selectedSub1.includes('all') && selectedSub1.length > 0) {
+                filtered = filtered.filter(t => selectedSub1.includes(t.subcategory1) || selectedSub1.includes(t.subcategory));
             }
             
-            if (filterSubcategory2 !== 'all') {
-                filtered = filtered.filter(t => t.subcategory2 === filterSubcategory2);
+            // Subcategory 2 filter
+            if (!selectedSub2.includes('all') && selectedSub2.length > 0) {
+                filtered = filtered.filter(t => selectedSub2.includes(t.subcategory2));
             }
             
-            if (filterAdvisor !== 'all') {
-                filtered = filtered.filter(t => t.advisor === filterAdvisor);
+            // Advisor filter
+            if (!selectedAdvisors.includes('all') && selectedAdvisors.length > 0) {
+                filtered = filtered.filter(t => selectedAdvisors.includes(t.advisor));
             }
             
             return filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
